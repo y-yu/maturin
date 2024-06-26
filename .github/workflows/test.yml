@@ -257,6 +257,9 @@ jobs:
       - name: Check JSON
         run: cargo build --manifest-path Cargo.toml --message-format=json-render-diagnostics --release -v --no-default-features --locked
 
+      - name: Install
+        run: pip install .
+
 #      - name: Install cargo-nextest
 #        run: cargo install cargo-nextest
 
