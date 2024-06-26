@@ -266,6 +266,12 @@ jobs:
             mingw-w64-${{ matrix.arch }}-openssl
             mingw-w64-${{ matrix.arch }}-toolchain
 
+      - name: Install Rustup using win.rustup.rs
+        run: |
+          curl -o rustup-init.exe -sSL https://win.rustup.rs/
+          ./rustup-init.exe -y --default-host=${{ matrix.rust_target }} --profile=minimal
+          rm rustup-init.exe            
+
       - name: Install Rust
         run: |
           rustup install stable --profile minimal
