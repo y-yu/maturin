@@ -212,6 +212,71 @@ jobs:
           cargo run new --mixed -b pyo3 test-crates/pyo3-new-mixed
           cargo run build -m test-crates/pyo3-new-mixed/Cargo.toml --target-dir test-crates/targets/
 
+  test-mingw:
+    runs-on: windows-latest
+    env:
+      RUST_BACKTRACE: "1"
+    name: mingw-${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: [
+          { msystem: MINGW64, arch: x86_64, path: mingw64, rust_target: x86_64-pc-windows-gnu },
+          { msystem: MINGW32, arch: i686, path: mingw32, rust_target: i686-pc-windows-gnu }
+        ]
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install MSys2 and dependencies
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          path-type: inherit
+          msystem: ${{ matrix.msystem }}
+          install: >-
+            git
+            mingw-w64-${{ matrix.arch }}-python
+            mingw-w64-${{ matrix.arch }}-python-pip
+            mingw-w64-${{ matrix.arch }}-openssl
+            mingw-w64-${{ matrix.arch }}-toolchain
+
+      - name: Install Rustup using win.rustup.rs
+        run: |
+          curl -o rustup-init.exe -sSL https://win.rustup.rs/
+          ./rustup-init.exe -y --default-host=${{ matrix.rust_target }} --profile=minimal
+          rm rustup-init.exe            
+
+      - name: Install Rust
+        run: |
+          rustup install stable --profile minimal
+          rustup default stable
+          rustup target add ${{ matrix.rust_target }}          
+    
+#      - name: Install cargo-nextest
+#        run: cargo install cargo-nextest
+
+#      - name: Install test dependencies
+#        run: python -m pip install --upgrade nox pip wheel
+
+#      - name: Create libpython symlink
+#        run: ln -s /${{ matrix.path }}/lib/libpython3.11.dll.a /${{ matrix.path }}/lib/libpython311.adll.a
+
+#      - name: cargo test
+#        run: cargo nextest run --features password-storage
+
+      - name: test maturin new
+        run: |
+          set -ex
+          cargo run new -b pyo3 test-crates/pyo3-new
+          cargo run build -m test-crates/pyo3-new/Cargo.toml --target-dir test-crates/targets/
+          cargo run new --mixed -b pyo3 test-crates/pyo3-new-mixed
+          cargo run build -m test-crates/pyo3-new-mixed/Cargo.toml --target-dir test-crates/targets/
+
+      - name: build
+        run: cargo run -- build --release -b bin -o dist --target ${{ matrix.rust_target }} --features password-storage
+
   test-emscripten:
     name: Test Emscripten
     if: github.event_name != 'pull_request'
