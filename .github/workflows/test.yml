@@ -234,6 +234,7 @@ jobs:
         with:
           update: true
           path-type: inherit
+          cache: false
           msystem: ${{ matrix.msystem }}
           install: >-
             git
