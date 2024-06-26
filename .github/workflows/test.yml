@@ -290,6 +290,17 @@ jobs:
       - name: cargo test
         run: cargo nextest run --features password-storage
 
+      - name: test maturin new
+        run: |
+          set -ex
+          cargo run new -b pyo3 test-crates/pyo3-new
+          cargo run build -m test-crates/pyo3-new/Cargo.toml --target-dir test-crates/targets/
+          cargo run new --mixed -b pyo3 test-crates/pyo3-new-mixed
+          cargo run build -m test-crates/pyo3-new-mixed/Cargo.toml --target-dir test-crates/targets/
+
+      - name: build
+        run: cargo run -- build --release -b bin -o dist --target ${{ matrix.rust_target }} --features password-storage
+
   test-emscripten:
     name: Test Emscripten
     if: github.event_name != 'pull_request'
